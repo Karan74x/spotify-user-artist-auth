@@ -26,4 +26,32 @@ async function authArtist(req, res, next) {
   }
 }
 
-module.exports = { authArtist };
+async function authUser(req, res, next) {
+  const token = req.cookies.token;
+
+  if (!token) {
+    return res.status(401).json({
+      message: "Unauthorized",
+    });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.SECRET_KEY);
+
+    if (decoded.role !== "user") {
+      return res.status(403).json({
+        message: "You dont have access",
+      });
+    }
+
+    req.user = decoded;
+
+    next();
+  } catch (err) {
+    res.status(401).json({
+      message: "Unauthorized",
+      error: err.message,
+    });
+  }
+}
+module.exports = { authArtist, authUser };
